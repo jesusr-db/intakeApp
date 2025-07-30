@@ -1,5 +1,6 @@
 """User service for Databricks user operations."""
 
+import os
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.iam import User
 
@@ -9,7 +10,19 @@ class UserService:
 
   def __init__(self):
     """Initialize the user service with Databricks workspace client."""
-    self.client = WorkspaceClient()
+    # Configure client with environment variables
+    config = {}
+    
+    if os.getenv('DATABRICKS_CONFIG_PROFILE'):
+      config['profile'] = os.getenv('DATABRICKS_CONFIG_PROFILE')
+    
+    if os.getenv('DATABRICKS_HOST'):
+      config['host'] = os.getenv('DATABRICKS_HOST')
+      
+    if os.getenv('DATABRICKS_TOKEN'):
+      config['token'] = os.getenv('DATABRICKS_TOKEN')
+    
+    self.client = WorkspaceClient(**config)
 
   def get_current_user(self) -> User:
     """Get the current authenticated user."""

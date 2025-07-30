@@ -65,5 +65,34 @@ async def health():
 # This static file mount MUST be the last route registered!
 # It catches all unmatched requests and serves the React app.
 # Any routes added after this will be unreachable!
-if os.path.exists('client/build'):
-  app.mount('/', StaticFiles(directory='client/build', html=True), name='static')
+
+# Try multiple possible locations for the build directory
+build_paths = [
+    'client/build',
+    './client/build', 
+    '../client/build',
+    'build',
+    './build'
+]
+
+build_dir = None
+for path in build_paths:
+    if os.path.exists(path):
+        build_dir = path
+        print(f"Found build directory at: {path}")
+        break
+
+if build_dir:
+    app.mount('/', StaticFiles(directory=build_dir, html=True), name='static')
+    print(f"Mounted static files from: {build_dir}")
+else:
+    print(f"Warning: No build directory found. Checked paths: {build_paths}")
+    print(f"Current working directory: {os.getcwd()}")
+    print(f"Directory contents: {os.listdir('.')}")
+    
+    # As fallback, create a simple redirect to docs
+    from fastapi.responses import RedirectResponse
+    
+    @app.get('/')
+    async def root():
+        return RedirectResponse(url='/docs')
